@@ -26,6 +26,7 @@ extern "C" {
     #include "build/debug.h"
 
     #include "blackbox/blackbox.h"
+    #include "blackbox/blackbox_io.h"
 
     #include "pg/pg.h"
     #include "pg/pg_ids.h"
@@ -37,7 +38,7 @@ extern "C" {
     #include "drivers/serial.h"
 
     #include "fc/config.h"
-    #include "fc/fc_core.h"
+    #include "fc/core.h"
     #include "fc/rc_controls.h"
     #include "fc/rc_modes.h"
     #include "fc/runtime_config.h"
@@ -49,6 +50,7 @@ extern "C" {
     #include "io/gps.h"
     #include "io/osd.h"
 
+    #include "sensors/acceleration.h"
     #include "sensors/battery.h"
 
     #include "rx/rx.h"
@@ -68,6 +70,9 @@ extern "C" {
     int16_t GPS_directionToHome;
     int32_t GPS_coord[2];
     gpsSolutionData_t gpsSol;
+
+    acc_t acc;
+    float accAverage[XYZ_AXIS_COUNT];
 
     PG_REGISTER(batteryConfig_t, batteryConfig, PG_BATTERY_CONFIG, 0);
     PG_REGISTER(blackboxConfig_t, blackboxConfig, PG_BLACKBOX_CONFIG, 0);
@@ -299,6 +304,9 @@ TEST(OsdTest, TestStatsImperial)
     osdStatSetState(OSD_STAT_RTC_DATE_TIME, true);
     osdStatSetState(OSD_STAT_MAX_DISTANCE, true);
     osdStatSetState(OSD_STAT_BLACKBOX_NUMBER, false);
+    osdStatSetState(OSD_STAT_MAX_G_FORCE, false);
+    osdStatSetState(OSD_STAT_MAX_ESC_TEMP, false);
+    osdStatSetState(OSD_STAT_MAX_ESC_RPM, false);
 
     // and
     // using imperial unit system
@@ -1000,7 +1008,7 @@ extern "C" {
         return simulationMahDrawn;
     }
 
-    int32_t getEstimatedAltitude() {
+    int32_t getEstimatedAltitudeCm() {
         return simulationAltitude;
     }
 
@@ -1010,6 +1018,14 @@ extern "C" {
 
     unsigned int blackboxGetLogNumber() {
         return 0;
+    }
+
+    bool isBlackboxDeviceWorking() {
+        return true;
+    }
+
+    bool isBlackboxDeviceFull() {
+        return false;
     }
 
     bool isSerialTransmitBufferEmpty(const serialPort_t *) {
@@ -1032,5 +1048,7 @@ extern "C" {
         return false;
     }
 
-    float pidItermAccelerator(void) { return 1.0; }
+    bool pidOsdAntiGravityActive(void) { return false; }
+
+    bool failsafeIsActive(void) { return false; }
 }

@@ -186,10 +186,6 @@
     #define __spiBusTransactionEnd(busdev)       IOHi((busdev)->busdev_u.spi.csnPin)
 #endif
 
-#ifndef MAX7456_SPI_CLK
-#define MAX7456_SPI_CLK           (SPI_CLOCK_STANDARD)
-#endif
-
 busDevice_t max7456BusDevice;
 busDevice_t *busdev = &max7456BusDevice;
 
@@ -415,18 +411,18 @@ void max7456ReInit(void)
 // Here we init only CS and try to init MAX for first time.
 // Also detect device type (MAX v.s. AT)
 
-void max7456Init(const max7456Config_t *max7456Config, const vcdProfile_t *pVcdProfile, bool cpuOverclock)
+bool max7456Init(const max7456Config_t *max7456Config, const vcdProfile_t *pVcdProfile, bool cpuOverclock)
 {
     max7456HardwareReset();
 
     if (!max7456Config->csTag) {
-        return;
+        return false;
     }
 
     busdev->busdev_u.spi.csnPin = IOGetByTag(max7456Config->csTag);
 
     if (!IOIsFreeOrPreinit(busdev->busdev_u.spi.csnPin)) {
-        return;
+        return false;
     }
 
     IOInit(busdev->busdev_u.spi.csnPin, OWNER_OSD_CS, 0);
@@ -489,6 +485,7 @@ void max7456Init(const max7456Config_t *max7456Config, const vcdProfile_t *pVcdP
 #endif
 
     // Real init will be made later when driver detect idle.
+    return true;
 }
 
 /**
